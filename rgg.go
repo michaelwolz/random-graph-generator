@@ -13,20 +13,19 @@ import (
 	"time"
 )
 
-//graph
-
+// graph
 type graph struct {
 	vertices  []int
 	adjMatrix [][]uint8
 }
 
 func (g *graph) init(v int) {
-	//add vertices
+	// add vertices
 	for i := 0; i < v; i++ {
 		g.addVertex(i)
 	}
 
-	//initialize adjacency matrix
+	// initialize adjacency matrix
 	g.adjMatrix = make([][]uint8, v-1)
 	for i := range g.adjMatrix {
 		g.adjMatrix[i] = make([]uint8, v-1)
@@ -70,7 +69,7 @@ func (g *graph) printAdjMatrix() {
 }
 
 func minMax(v1, v2 int) (int, int) {
-	//v1 - 1, because we don't have a first row! (lower triangular matrix)
+	// v1 - 1, because we don't have a first row! (lower triangular matrix)
 	if v1 > v2 {
 		return v1 - 1, v2
 	}
@@ -93,7 +92,7 @@ func (g *graph) generateJSONGraph() {
 	fmt.Print("JSON-Data written to file: ./graph.json\n\n")
 }
 
-//needed to define this function, because json.Marschal messes up uint8 values
+// needed to define this function, because json.Marschal messes up uint8 values
 func (g *graph) MarshalJSON() ([]byte, error) {
 	var array string
 	if g.adjMatrix == nil {
@@ -110,7 +109,7 @@ func (g *graph) MarshalJSON() ([]byte, error) {
 var maxEdges int
 
 func main() {
-	//init
+	// init
 	var args = os.Args[1:]
 	if len(args) < 2 {
 		fmt.Fprintln(os.Stderr, "usage: rgg vertices edges")
@@ -131,16 +130,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	//seed the pseudo-rand generator
+	// seed the pseudo-rand generator
 	rand.Seed(time.Now().UnixNano())
 
-	//build graph
+	// build graph
 	g := buildRandomGraph(v, e)
 
-	//ouput adjList
+	// ouput adjList
 	g.printAdjMatrix()
 
-	//write graph to JSON-file
+	// write graph to JSON-file
 	g.generateJSONGraph()
 }
 
@@ -149,7 +148,7 @@ func buildRandomGraph(v, e int) graph {
 	g.init(v)
 
 	if e == maxEdges {
-		//if amount of edges equals maxEdges, just connect ALL vertices.
+		// if amount of edges equals maxEdges, just connect ALL vertices.
 		for i := 0; i < v; i++ {
 			for j := i + 1; j < v; j++ {
 				g.addEdge(i, j)
@@ -163,13 +162,13 @@ func buildRandomGraph(v, e int) graph {
 }
 
 func distributeEdges(g graph, v, e int) {
-	//connect all vertices with v-1 edges
+	// connect all vertices with v-1 edges
 	var vertexPermutation = rand.Perm(v)
 	for i := 0; i < len(vertexPermutation)-1; i++ {
 		g.addEdge(vertexPermutation[i], vertexPermutation[i+1])
 	}
 
-	//randomly add the remaining edges to the graph
+	// randomly add the remaining edges to the graph
 	remaining := e - v + 1
 	for remaining > 0 {
 		g.addRandomEdge()
@@ -177,8 +176,7 @@ func distributeEdges(g graph, v, e int) {
 	}
 }
 
-//helper functions
-
+// helper functions
 func argParse(arg string) int {
 	res, err := strconv.Atoi(arg)
 	check(err)
