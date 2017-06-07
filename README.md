@@ -6,8 +6,8 @@ The RGG generates a random graph with a defined amount of vertices and edges.
 
 ```console
 
-Usage: rgg
+Usage: rgg vertices edges
 
-e should be at least v-1
+Amount of edges must be at least amount of vertices - 1!
 
 ```

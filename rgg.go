@@ -54,10 +54,6 @@ func (g *graph) generateJSONGraph() {
 	fmt.Print("JSON-Data written to file: ./graph.json\n\n")
 }
 
-func (v *vertex) toString() string {
-	return ""
-}
-
 var maxEdges int
 
 func main() {
