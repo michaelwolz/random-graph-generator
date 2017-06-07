@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+//graph
+
 type graph struct {
 	vertices  []int
 	adjMatrix [][]uint8
@@ -103,9 +105,9 @@ func (g *graph) MarshalJSON() ([]byte, error) {
 	return []byte(jsonResult), nil
 }
 
-var maxEdges int
-
 // ######################
+
+var maxEdges int
 
 func main() {
 	//init
@@ -174,6 +176,8 @@ func distributeEdges(g graph, v, e int) {
 		remaining--
 	}
 }
+
+//helper functions
 
 func argParse(arg string) int {
 	res, err := strconv.Atoi(arg)
