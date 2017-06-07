@@ -1,6 +1,7 @@
 # Random Graph Generator
 
-The RGG generates a random graph with a defined amount of vertices and edges.
+The RGG generates a random graph with a v vertices and e edges and outputs its adjacency matrix to a JSON file.
+For performance reasons the adjacency matrix is represented by the lower triangular matrix. 
 
 ### Usage manual
 

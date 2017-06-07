@@ -9,33 +9,70 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type graph struct {
-	Vertices []vertex `json:"vertices"`
+	vertices  []int
+	adjMatrix [][]uint8
 }
 
-type vertex struct {
-	ID    int
-	Edges []int `json:"edges"`
+func (g *graph) init(v int) {
+	//add vertices
+	for i := 0; i < v; i++ {
+		g.addVertex(i)
+	}
+
+	//initialize adjacency matrix
+	g.adjMatrix = make([][]uint8, v-1)
+	for i := range g.adjMatrix {
+		g.adjMatrix[i] = make([]uint8, v-1)
+	}
 }
 
 func (g *graph) addVertex(ID int) {
-	g.Vertices = append(g.Vertices, vertex{ID, nil})
+	g.vertices = append(g.vertices, ID)
 }
 
 func (g *graph) addEdge(v1, v2 int) {
-	g.Vertices[v1].Edges = append(g.Vertices[v1].Edges, v2)
-	g.Vertices[v2].Edges = append(g.Vertices[v2].Edges, v1)
+	v1, v2 = minMax(v1, v2)
+	g.adjMatrix[v1][v2] = 1
 }
 
-func (g *graph) traverseGraph() {
-	fmt.Print("\n##### GRAPH #####\n\n")
-	for i, v := range g.Vertices {
-		fmt.Printf("(%d) -> %v\n", i, v.Edges)
+func (g *graph) addRandomEdge() {
+	// worst part :/
+	var v = len(g.vertices)
+	var v1, v2 int
+
+	for v1 == v2 {
+		v1 = rand.Intn(v - 1)
+		v2 = rand.Intn(v - 1)
 	}
-	fmt.Print("\n##################\n\n")
+
+	v1, v2 = minMax(v1, v2)
+	fmt.Println(v1, v2)
+	if g.adjMatrix[v1][v2] == 0 {
+		g.adjMatrix[v1][v2] = 1
+	} else {
+		g.addRandomEdge()
+	}
+}
+
+func (g *graph) printAdjMatrix() {
+	fmt.Print("\n##### GRAPH ADJACENCY MATRIX #####\n\n")
+	for i := 0; i < len(g.vertices)-1; i++ {
+		fmt.Printf("(%d) %v\n", i+1, g.adjMatrix[i])
+	}
+	fmt.Print("\n##################################\n\n")
+}
+
+func minMax(v1, v2 int) (int, int) {
+	//v1 - 1, because we don't have a first row! (lower triangular matrix)
+	if v1 > v2 {
+		return v1 - 1, v2
+	}
+	return v2 - 1, v1
 }
 
 func (g *graph) generateJSONGraph() {
@@ -54,7 +91,21 @@ func (g *graph) generateJSONGraph() {
 	fmt.Print("JSON-Data written to file: ./graph.json\n\n")
 }
 
+//needed to define this function, because json.Marschal messes up uint8 values
+func (g *graph) MarshalJSON() ([]byte, error) {
+	var array string
+	if g.adjMatrix == nil {
+		array = "null"
+	} else {
+		array = strings.Join(strings.Fields(fmt.Sprintf("%d", g.adjMatrix)), ",")
+	}
+	jsonResult := fmt.Sprintf(`{"adjMatrix":%s}`, array)
+	return []byte(jsonResult), nil
+}
+
 var maxEdges int
+
+// ######################
 
 func main() {
 	//init
@@ -78,22 +129,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	//seed the pseudo-rand generators
+	//seed the pseudo-rand generator
 	rand.Seed(time.Now().UnixNano())
 
 	//build graph
 	g := buildRandomGraph(v, e)
 
 	//ouput adjList
-	g.traverseGraph()
+	g.printAdjMatrix()
+
+	//write graph to JSON-file
 	g.generateJSONGraph()
 }
 
 func buildRandomGraph(v, e int) graph {
 	var g = graph{}
-	for i := 0; i < v; i++ {
-		g.addVertex(i)
-	}
+	g.init(v)
 
 	if e == maxEdges {
 		//if amount of edges equals maxEdges, just connect ALL vertices.
@@ -119,6 +170,7 @@ func distributeEdges(g graph, v, e int) {
 	//randomly add the remaining edges to the graph
 	remaining := e - v + 1
 	for remaining > 0 {
+		g.addRandomEdge()
 		remaining--
 	}
 }
@@ -126,7 +178,6 @@ func distributeEdges(g graph, v, e int) {
 func argParse(arg string) int {
 	res, err := strconv.Atoi(arg)
 	check(err)
-
 	return res
 }
 
