@@ -3,6 +3,8 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -11,27 +13,52 @@ import (
 )
 
 type graph struct {
-	vertices []vertex
+	Vertices []vertex `json:"vertices"`
 }
 
 type vertex struct {
-	edges []int
+	ID    int
+	Edges []int `json:"edges"`
 }
 
-func (g *graph) addVertex() {
-	g.vertices = append(g.vertices, vertex{})
+func (g *graph) addVertex(ID int) {
+	g.Vertices = append(g.Vertices, vertex{ID, nil})
 }
 
 func (g *graph) addEdge(v1, v2 int) {
-	g.vertices[v1].edges = append(g.vertices[v1].edges, v2)
-	g.vertices[v2].edges = append(g.vertices[v2].edges, v1)
+	g.Vertices[v1].Edges = append(g.Vertices[v1].Edges, v2)
+	g.Vertices[v2].Edges = append(g.Vertices[v2].Edges, v1)
 }
 
 func (g *graph) traverseGraph() {
-	for i, v := range g.vertices {
-		fmt.Printf("(%d) -> %v\n", i, v)
+	fmt.Print("\n##### GRAPH #####\n\n")
+	for i, v := range g.Vertices {
+		fmt.Printf("(%d) -> %v\n", i, v.Edges)
 	}
+	fmt.Print("\n##################\n\n")
 }
+
+func (g *graph) generateJSONGraph() {
+	json, _ := json.Marshal(g)
+
+	f, err := os.Create("graph.json")
+	check(err)
+
+	defer f.Close()
+
+	w := bufio.NewWriter(f)
+	_, err = w.WriteString(string(json))
+	check(err)
+	w.Flush()
+
+	fmt.Print("JSON-Data written to file: ./graph.json\n\n")
+}
+
+func (v *vertex) toString() string {
+	return ""
+}
+
+var maxEdges int
 
 func main() {
 	//init
@@ -43,7 +70,7 @@ func main() {
 
 	v := argParse(args[0])
 	e := argParse(args[1])
-	maxEdges := v * (v - 1) / 2
+	maxEdges = v * (v - 1) / 2
 
 	if e > maxEdges {
 		fmt.Fprintf(os.Stderr, "error: max amount of edges in a graph with %d vertices is %d. Edge weight must be 1\n", v, maxEdges)
@@ -63,16 +90,17 @@ func main() {
 
 	//ouput adjList
 	g.traverseGraph()
+	g.generateJSONGraph()
 }
 
 func buildRandomGraph(v, e int) graph {
 	var g = graph{}
 	for i := 0; i < v; i++ {
-		g.addVertex()
+		g.addVertex(i)
 	}
 
-	if v-1 == e {
-		//if amount of edges equals amount of vertices - 1, just connect ALL vertices. Much faster!
+	if e == maxEdges {
+		//if amount of edges equals maxEdges, just connect ALL vertices.
 		for i := 0; i < v; i++ {
 			for j := i + 1; j < v; j++ {
 				g.addEdge(i, j)
@@ -92,22 +120,22 @@ func distributeEdges(g graph, v, e int) {
 		g.addEdge(vertexPermutation[i], vertexPermutation[i+1])
 	}
 
-	//and add the remaining edges
+	//randomly add the remaining edges to the graph
 	remaining := e - v + 1
 	for remaining > 0 {
 		remaining--
 	}
 }
 
-func generateJSONOutput() {
-}
-
 func argParse(arg string) int {
 	res, err := strconv.Atoi(arg)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "vertices and edges must be numbers")
-		panic(err)
-	} else {
-		return res
+	check(err)
+
+	return res
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
 	}
 }
